@@ -435,9 +435,12 @@ def _monitor_required(handler):
     @wraps(handler)
     def wrapped(*args, **kwargs):
         if not FULL_MODE:
-            # Standalone mode: one shared token via HTTP Basic (any username).
+            # Standalone mode: one shared token via HTTP Basic (any username);
+            # with no token configured the monitor is open.
+            if not MONITOR_TOKEN:
+                return handler(*args, **kwargs)
             supplied = request.authorization.password if request.authorization else ''
-            if MONITOR_TOKEN and hmac.compare_digest(supplied, MONITOR_TOKEN):
+            if hmac.compare_digest(supplied, MONITOR_TOKEN):
                 return handler(*args, **kwargs)
             return 'Monitor token required', 401, {'WWW-Authenticate': 'Basic realm="LLama Monitor"'}
         user = _authenticated_user()
@@ -738,9 +741,17 @@ def _load_services_config():
 
 
 def _standalone_health_parser(payload, name):
+    # mlx servers name these fields loaded_model/loaded_context_size; the
+    # original dspark style used model/context_window — accept both.
+    raw = payload.get('loaded_context_size') or payload.get('context_window')
+    try:
+        tokens = int(raw)
+        context = f'{tokens // 1024}K' if tokens % 1024 == 0 else f'{tokens:,}'
+    except (TypeError, ValueError):
+        context = '—'
     return {'name': name, 'qwen': True,
-            'loaded_model': str(payload.get('model', 'unknown')),
-            'context': payload.get('context_window', '—')}
+            'loaded_model': str(payload.get('loaded_model') or payload.get('model') or 'unknown'),
+            'context': context}
 
 
 def _standalone_chat_parser(payload):

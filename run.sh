@@ -7,12 +7,7 @@ cd "$(dirname "$0")"
 
 export MONITOR_TARGET_HOST="${MONITOR_TARGET_HOST:-127.0.0.1}"
 export MONITOR_PORT="${MONITOR_PORT:-7779}"
-
-if [ -z "${MONITOR_TOKEN:-}" ]; then
-  echo "Set MONITOR_TOKEN to the shared access token first, e.g.:" >&2
-  echo "  MONITOR_TOKEN='<long random string>' ./run.sh" >&2
-  exit 1
-fi
+# MONITOR_TOKEN is optional: unset means the monitor is open (no auth).
 
 if command -v gunicorn >/dev/null 2>&1; then
   exec gunicorn -b "0.0.0.0:$MONITOR_PORT" --workers 2 --threads 4 --worker-class gthread \

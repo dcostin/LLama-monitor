@@ -1,10 +1,7 @@
 {
   "services": [
-    {"kind": "ollama", "name": "Ollama 11434 (Muse Glimmer)", "port": 11434, "model": "muse-glimmer:30b-mlx"},
-    {"kind": "ollama", "name": "Ollama 11435 (Nomic embeddings)", "port": 11435, "model": "nomic-embed-text"},
-    {"kind": "ollama", "name": "Ollama 11436 (Gemma compaction)", "port": 11436, "model": "gemma4:e4b"},
-    {"kind": "health", "name": "Qwen3.8-27B", "port": 11232},
-    {"kind": "health", "name": "MLX-DSpark (Qwen3-14B)", "port": 11233},
-    {"kind": "chat", "name": "Chat (main)", "port": 7777}
+    {"kind": "ollama", "name": "Ollama 11434 (Qwen3 Coder 32k)", "port": 11434, "model": "qwen3-coder-32k:latest"},
+    {"kind": "ollama", "name": "Ollama 11434 (Qwen3 Coder 30b)", "port": 11434, "model": "qwen3-coder:30b"},
+    {"kind": "health", "name": "Qwen 3.8 27B MLX (7878)", "port": 7878}
   ]
 }

@@ -42,8 +42,9 @@ entries with what actually runs here.
    then `./check.py` — it exits 1 on config errors and prints an OK/DOWN line
    per service. Iterate until the config is right (DOWN services may simply be
    stopped; confirm with the user before deleting entries).
-4. Run: `MONITOR_TOKEN='<long random string>' ./run.sh` →
-   `http://<machine>:7779/` (token as HTTP Basic password).
+4. Run: `./run.sh` → `http://<machine>:7779/`. Access is open by default;
+   start with `MONITOR_TOKEN='<long random string>'` to require the token
+   (HTTP Basic, any username, token as password).
 
 ## Things not to do
 
