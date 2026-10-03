@@ -1,4 +1,4 @@
-# Llama Monitor
+# LLama Monitor
 
 <table style="border: none;">
   <tr>
