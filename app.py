@@ -176,7 +176,7 @@ PAGE = PAGE.replace('<style>', '<style>.log-controls{display:flex;align-items:ce
 PAGE = PAGE.replace('<meta http-equiv="refresh" content="30">', '<meta name="viewport" content="width=device-width, initial-scale=1"><meta http-equiv="refresh" content="{{refresh_seconds}}">')
 PAGE = PAGE.replace('</body></html>', '<script>async function restartModel(button,target){if(button.disabled)return;button.disabled=true;button.textContent="Restarting…";try{const response=await fetch("/api/model-services/"+encodeURIComponent(target)+"/restart",{method:"POST",credentials:"same-origin"});if(!response.ok)throw Error(await response.text()||("HTTP "+response.status));setTimeout(()=>location.reload(),3000)}catch(error){button.disabled=false;button.textContent="Restart failed";button.title=error.message||"Could not restart model"}}let monitorSignal="{{monitor_signal}}";setInterval(()=>fetch("/api/monitor/signal-status",{cache:"no-store"}).then(r=>r.text()).then(v=>{if(v!==monitorSignal)location.reload()}).catch(()=>{}),2000)</script></body></html>')
 PAGE = PAGE.replace('</style>', '@media (max-width:600px){body{margin:.6rem}.status{grid-template-columns:1fr}.topbar{align-items:flex-start}.topbar h1{font-size:17px}.monitor-user{font-size:11px;text-align:right;overflow-wrap:anywhere}.access-review,.health{display:block;margin-right:0}}</style>', 1)
-PAGE = PAGE.replace('{% else %}<div class="detail">{{item.detail}}</div>{% endif %}', '{% elif item.qwen %}{% if item.ok %}<div class="detail"><div class="ok">Loaded: {{item.loaded_model}}</div><div>Context: {{item.context}}</div></div>{% else %}<div class="detail"><span class="down">Available: No</span></div>{% endif %}{% else %}<div class="detail">{{item.detail}}</div>{% endif %}')
+PAGE = PAGE.replace('{% else %}<div class="detail">{{item.detail}}</div>{% endif %}', '{% elif item.qwen %}{% if item.ok %}<div class="detail"><div class="ok">Loaded: {{item.loaded_model}}</div><div>Context: {{item.context}}</div></div>{% else %}<div class="detail"><span class="down">Available: No</span></div>{% endif %}{% if item.launchd %}<div class="detail"><div>Agent: {{"running" if item.launchd_running else "stopped"}}</div><form method="post" action="/service/power"><input type="hidden" name="label" value="{{item.launchd}}"><input type="hidden" name="action" value="{{"stop" if item.launchd_running else "start"}}"><button type="submit" style="margin-top:4px">{{"Stop service" if item.launchd_running else "Start service"}}</button></form></div>{% endif %}{% else %}<div class="detail">{{item.detail}}</div>{% endif %}')
 
 PAGE = PAGE.replace(
     '{% else %}<div class="detail">{{item.detail}}</div>{% endif %}',
@@ -763,6 +763,42 @@ def _standalone_chat_parser(payload):
     return {'chat': True, 'models': rows or [{'name': 'No models reported', 'online': False}]}
 
 
+def _launchd_loaded(label):
+    try:
+        result = subprocess.run(['launchctl', 'print', f'gui/{os.getuid()}/{label}'],
+                                capture_output=True, timeout=5)
+        return result.returncode == 0
+    except (OSError, subprocess.SubprocessError):
+        return False
+
+
+def _service_power():
+    label = str(request.form.get('label') or '').strip()
+    action = str(request.form.get('action') or '').strip()
+    allowed = {str(s.get('launchd')) for s in _load_services_config()
+               if isinstance(s, dict) and s.get('launchd')}
+    if action not in ('start', 'stop') or label not in allowed:
+        return 'Bad request', 400
+    uid = os.getuid()
+    if action == 'stop':
+        # disable first so KeepAlive cannot relaunch during bootout; the
+        # disabled flag persists across reboots until Start is pressed.
+        subprocess.run(['launchctl', 'disable', f'gui/{uid}/{label}'],
+                       capture_output=True, timeout=15)
+        subprocess.run(['launchctl', 'bootout', f'gui/{uid}/{label}'],
+                       capture_output=True, timeout=15)
+    else:
+        subprocess.run(['launchctl', 'enable', f'gui/{uid}/{label}'],
+                       capture_output=True, timeout=15)
+        plist = os.path.expanduser(f'~/Library/LaunchAgents/{label}.plist')
+        subprocess.run(['launchctl', 'bootstrap', f'gui/{uid}', plist],
+                       capture_output=True, timeout=15)
+    return redirect('/')
+
+
+app.add_url_rule('/service/power', 'service_power', _monitor_required(_service_power), methods=['POST'])
+
+
 def _standalone_cards():
     """Standalone mode: one card per entry in services.json."""
     services = _load_services_config()
@@ -787,6 +823,14 @@ def _standalone_cards():
                                 parser=_standalone_chat_parser, verify=False))
         else:
             cards.append(_probe(name=name, url=url))
+        label = str(service.get('launchd') or '').strip()
+        if label:
+            card = cards[-1]
+            card['launchd'] = label
+            card['launchd_running'] = _launchd_loaded(label)
+            # the probe only sets qwen on success; force the branch that
+            # carries the Agent status line and Start/Stop buttons when down
+            card.setdefault('qwen', True)
     return cards
 
 

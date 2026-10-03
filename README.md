@@ -34,6 +34,7 @@ The `services.json` file defines what services to monitor:
 - `health`: any OpenAI-compatible local server exposing `/health` with `{"model": ..., "context_window": ...}`
 - `chat`: a chat server exposing `/api/models` (the chatLlama backend); probed over HTTPS with certificate verification off
 - `http`: plain reachability probe of `url`; any 2xx counts as up
+- `launchd` (optional, any card): LaunchAgent label — shows Agent state and Start/Stop buttons; a stop disables the agent (stays stopped across reboots) until Start is pressed
 
 ## Files
 

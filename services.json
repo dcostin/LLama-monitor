@@ -2,6 +2,6 @@
   "services": [
     {"kind": "ollama", "name": "Ollama 11434 (Qwen3 Coder 32k)", "port": 11434, "model": "qwen3-coder-32k:latest"},
     {"kind": "ollama", "name": "Ollama 11434 (Qwen3 Coder 30b)", "port": 11434, "model": "qwen3-coder:30b"},
-    {"kind": "health", "name": "Qwen 3.8 27B MLX (7878)", "port": 7878}
+    {"kind": "health", "name": "Qwen 3.8 27B MLX (7878)", "port": 7878, "launchd": "local.mlx-qwen38"}
   ]
 }

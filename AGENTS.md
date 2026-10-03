@@ -28,6 +28,10 @@ standalone mode. One card per entry:
   `127.0.0.1`).
 - `port`, `name` — required for the non-`http` kinds (`url` replaces both for
   `http`).
+- `launchd` — optional LaunchAgent label (e.g. `local.mlx-qwen38`); adds an
+  Agent running/stopped line plus Start/Stop buttons to the card (health cards).
+  Stop is `launchctl disable` + `bootout` — the service stays stopped across
+  reboots until Start (`enable` + `bootstrap`) is pressed.
 
 The shipped `services.json` is a working example from the original machine
 (Ollama ×3, two local inference servers, one chat server) — replace its
