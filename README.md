@@ -1,17 +1,15 @@
 # Llama Monitor
 
-<table>
+<table style="border: none;">
   <tr>
-    <td width="58%">
-      <img src="web/monitor_2x1.png" alt="LLama Monitor dashboard" width="100%" />
+    <td width="110" >
+      <img src="web/monitor.png" alt="LLama Monitor dashboard" width="100" />
     </td>
     <td valign="top" style="padding-left: 1.5rem;">
       <p><strong>Local model status at a glance.</strong> Llama Monitor keeps tabs on Ollama, health endpoints, chat servers, and local launchd agents from a single page so you can quickly see which services are up, which models are loaded, and whether a model restart is needed.</p>
     </td>
   </tr>
 </table>
-
-This is a local model-service status page that allows monitoring of various local AI model services like Ollama, health endpoints, and chat servers.
 
 ## Setup
 
